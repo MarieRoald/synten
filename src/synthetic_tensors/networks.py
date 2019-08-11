@@ -3,7 +3,7 @@ import numpy as np
 # import random
 
 
-class Graph:
+class Network:
     def __init__(self, num_nodes, num_chunks):
         self.num_nodes = num_nodes
         self.active_nodes = num_nodes
@@ -37,19 +37,19 @@ class Graph:
         return np.random.choice(list(range(len(self.chunks))), n, replace=False)
     
     def generate_pieces(self, num_pieces):
-        graph_pieces = []
+        network_pieces = []
         chunks_per_piece = self.num_chunks//num_pieces
         for i in range(num_pieces):
-            graph_piece = copy(self)
-            graph_piece.chunks = graph_piece.chunks[i*chunks_per_piece:(i+1)*chunks_per_piece]
-            nodes_per_chunk = [len(chunk) for chunk in graph_piece.chunks]
-            graph_piece.active_nodes = sum(nodes_per_chunk)
-            graph_pieces.append(graph_piece)
-        return graph_pieces
+            network_piece = copy(self)
+            network_piece.chunks = network_piece.chunks[i*chunks_per_piece:(i+1)*chunks_per_piece]
+            nodes_per_chunk = [len(chunk) for chunk in network_piece.chunks]
+            network_piece.active_nodes = sum(nodes_per_chunk)
+            network_pieces.append(network_piece)
+        return network_pieces
 
 
-class GraphPiece(Graph):
-    # TODO: kanskje Graph heller skal arve denne?
+class NetworkPiece(Network):
+    # TODO: kanskje Network heller skal arve denne?
     def __init__(self, start_idx, num_nodes, num_chunks):
         self.start_idx = start_idx
 
@@ -59,22 +59,22 @@ class GraphPiece(Graph):
         return np.arange(self.start_idx, self.start_idx+self.num_nodes)
 
 
-class ShiftedGraph:
+class ShiftedNetwork:
 
-    def __init__(self, graph):
-        self.graph = graph
+    def __init__(self, network):
+        self.network = network
 
     def evolve_one_step(self):
         #?
         pass
 
 
-class SubGraph:
-    def __init__(self, graph):
-        self.graph = graph
+class SubNetwork:
+    def __init__(self, network):
+        self.network = network
 
-    def init_subgraph(self, init_size, prob_adding=1, prob_removing=1):
-        self.chunk_idxs = self.graph.get_random_chunk_idx(init_size)
+    def init_subnetwork(self, init_size, prob_adding=1, prob_removing=1):
+        self.chunk_idxs = self.network.get_random_chunk_idx(init_size)
         chunk_weight = 1
         self.chunk_idxs = {c: chunk_weight for c in self.chunk_idxs}
         self.previously_removed = []
@@ -87,18 +87,18 @@ class SubGraph:
         # TODO: sikkert bedre måte å gjøre dette enn en for-løkke
         # TODO: skal man kunne ha en liten sjanse for å legge til prev removed?
 
-        selected = self.graph.get_random_chunk_idx(1)[0]
+        selected = self.network.get_random_chunk_idx(1)[0]
 
         while (selected in self.chunks or selected in self.previously_removed):
-            selected = self.graph.get_random_chunk_idx(1)[0] 
+            selected = self.network.get_random_chunk_idx(1)[0] 
         
         self.chunks.append(selected)
 
     def add_chunk(self):
-        """Adds a random chunk to the subgraph.
+        """Adds a random chunk to the subnetwork.
         """
         # TODO: skal man kunne ha en liten sjanse for å legge til prev removed?
-        chunk_idxs = set(range(self.graph.num_chunks))
+        chunk_idxs = set(range(self.network.num_chunks))
         removed_idxs = set(self.previously_removed)
         curr_idxs = set(self.chunk_idxs)
         available = chunk_idxs - removed_idxs - curr_idxs
@@ -111,7 +111,7 @@ class SubGraph:
         self.chunk_idxs[added] = 1
 
     def remove_chunk(self):
-        """Removes a random chunk to the subgraph.
+        """Removes a random chunk to the subnetwork.
         """
         if len(self.chunk_idxs) > 0:
             removed = np.random.choice(list(self.chunk_idxs.keys()))
@@ -138,18 +138,18 @@ class SubGraph:
   
     def get_factor_column(self, debug=False):
         if debug:
-            factor_column = np.zeros((self.graph.num_nodes))
+            factor_column = np.zeros((self.network.num_nodes))
 
             for chunk_idx, chunk_strength in self.chunk_idxs.items():
-                chunk = self.graph.chunks[chunk_idx]
+                chunk = self.network.chunks[chunk_idx]
                 for idx in chunk:
                     factor_column[idx] = chunk_strength
             return factor_column
 
-        factor_column = np.random.standard_normal((self.graph.num_nodes))*0.1 + 0.2
+        factor_column = np.random.standard_normal((self.network.num_nodes))*0.1 + 0.2
 
         for chunk_idx, chunk_strength in self.chunk_idxs.items():
-            chunk = self.graph.chunks[chunk_idx]
+            chunk = self.network.chunks[chunk_idx]
             for idx in chunk:
                 factor_column[idx] += (np.random.standard_normal()*chunk_strength*0.1) + chunk_strength*0.8
 
@@ -158,14 +158,14 @@ class SubGraph:
 
     @property
     def chunks(self):
-        return [self.graph.chunks[idx] for idx in self.chunk_idxs]
+        return [self.network.chunks[idx] for idx in self.chunk_idxs]
 
-class SmoothSubGraph(SubGraph):
+class SmoothSubNetwork(SubNetwork):
     #TODO: istedet for å ha chunk_idxs må vi ha to dicts en for om den er aktiv og en for styrke
     #TODO: legg til en weight update fase
 
-    def init_subgraph(self, init_size, prob_adding=1, prob_removing=1, activation_rate=0.1):
-        super().init_subgraph(
+    def init_subnetwork(self, init_size, prob_adding=1, prob_removing=1, activation_rate=0.1):
+        super().init_subnetwork(
             init_size=init_size,
             prob_adding=prob_adding,
             prob_removing=prob_removing
@@ -184,10 +184,10 @@ class SmoothSubGraph(SubGraph):
         self.update_weights()
 
     def add_chunk(self):
-        """Adds a random chunk to the subgraph.
+        """Adds a random chunk to the subnetwork.
         """
         # TODO: skal man kunne ha en liten sjanse for å legge til prev removed?
-        chunk_idxs = set(range(self.graph.num_chunks))
+        chunk_idxs = set(range(self.network.num_chunks))
         removed_idxs = set(self.previously_removed)
         curr_idxs = set(self.chunk_idxs)
         available = chunk_idxs - removed_idxs - curr_idxs
@@ -201,7 +201,7 @@ class SmoothSubGraph(SubGraph):
         self.chunk_idxs[added] = 0.01
 
     def remove_chunk(self):
-        """Removes a random chunk to the subgraph.
+        """Removes a random chunk to the subnetwork.
         """
         if len(self.chunk_idxs) > 0:
             removed = np.random.choice(list(self.chunk_idxs.keys()))
@@ -233,14 +233,14 @@ class SmoothSubGraph(SubGraph):
 
 
 
-class ShiftedSubGraph(SubGraph):
-    def init_subgraph(self, init_size, prob_shifting=0.5, prob_adding=0, prob_removing=0):
+class ShiftedSubNetwork(SubNetwork):
+    def init_subnetwork(self, init_size, prob_shifting=0.5, prob_adding=0, prob_removing=0):
         self.prob_shifting = prob_shifting
         self.shift = 0
-        super().init_subgraph(init_size=init_size, prob_adding=prob_adding, prob_removing=prob_removing)
+        super().init_subnetwork(init_size=init_size, prob_adding=prob_adding, prob_removing=prob_removing)
     
     def shift_phase(self):
-        """Checks if a the graph should shift
+        """Checks if a the network should shift
         """
         draw = np.random.uniform()
         if draw < self.prob_shifting:
@@ -251,18 +251,18 @@ class ShiftedSubGraph(SubGraph):
         super().evolve_one_step()
         
     def get_factor_column(self, debug=False):
-        min_idx = self.graph.nodes_in_chunks[0]
-        max_idx = self.graph.nodes_in_chunks[-1]
+        min_idx = self.network.nodes_in_chunks[0]
+        max_idx = self.network.nodes_in_chunks[-1]
 
-        factor_column = np.random.standard_normal((self.graph.num_nodes))*0.1 + 0.2
+        factor_column = np.random.standard_normal((self.network.num_nodes))*0.1 + 0.2
         if debug:
-            factor_column = np.zeros((self.graph.num_nodes))
+            factor_column = np.zeros((self.network.num_nodes))
 
         for chunk_idx, chunk_strength in self.chunk_idxs.items():
-            chunk = self.graph.chunks[chunk_idx]
+            chunk = self.network.chunks[chunk_idx]
             for idx in chunk:
 
-                idx = min_idx + ((idx - min_idx + self.shift) % self.graph.active_nodes)
+                idx = min_idx + ((idx - min_idx + self.shift) % self.network.active_nodes)
                 factor_column[idx] += (np.random.standard_normal()*chunk_strength*0.1) + chunk_strength*0.8
                 if debug:
                     factor_column[idx] = chunk_strength
@@ -270,22 +270,22 @@ class ShiftedSubGraph(SubGraph):
 
 
 
-class GraphFactorGenerator:
-    def __init__(self, graph_params, num_timesteps, generators, init_kwargs):
+class NetworkFactorGenerator:
+    def __init__(self, network_params, num_timesteps, generators, init_kwargs):
         """
-        graph_params : {'graph_type': Graph, 'graph_kwargs': {<KWARGS>}}
+        network_params : {'network_type': Network, 'network_kwargs': {<KWARGS>}}
         """
 
-        self.graph = graph_params['graph_type'](**graph_params['graph_kwargs'])
+        self.network = network_params['network_type'](**network_params['network_kwargs'])
 
-        self.generators = [Generator(self.graph,**kwargs) for Generator, kwargs in generators]
+        self.generators = [Generator(self.network,**kwargs) for Generator, kwargs in generators]
         self.init_kwargs = init_kwargs
         self.num_timesteps = num_timesteps
 
 
     def generate_factors(self):
         for generator, init_kwarg in zip(self.generators, self.init_kwargs):
-            generator.init_subgraph(**init_kwarg)
+            generator.init_subnetwork(**init_kwarg)
         
         components = []
         for generator in self.generators:
@@ -297,7 +297,7 @@ class GraphFactorGenerator:
         return np.array(components).transpose(2,0,1)
 
 
-class NonOverlappingGraphFactorGenerator_old(GraphFactorGenerator):
+class NonOverlappingNetworkFactorGenerator_old(NetworkFactorGenerator):
     def __init__(self, num_nodes, num_chunks, num_timesteps, generators, init_kwargs):
 
         self.num_components = len(generators)
@@ -306,45 +306,45 @@ class NonOverlappingGraphFactorGenerator_old(GraphFactorGenerator):
         num_nodes_in_piece = num_nodes//self.num_components
         num_chunks_in_piece = num_chunks//self.num_components
 
-        self.graphs = []
+        self.networks = []
         self.generators = []
 
 
         for r in range(self.num_components):
-            self.graphs.append(GraphPiece(start_idx=r*num_nodes_in_piece, 
+            self.networks.append(NetworkPiece(start_idx=r*num_nodes_in_piece, 
                                           num_nodes=num_nodes_in_piece, 
                                           num_chunks=num_chunks_in_piece))
 
 
         self.generators = [
-            Generator(graph_pice, **kwargs) for graph_pice, (Generator, kwargs) in zip(self.graphs, generators)
+            Generator(network_pice, **kwargs) for network_pice, (Generator, kwargs) in zip(self.networks, generators)
         ]
         self.init_kwargs = init_kwargs
         self.num_timesteps = num_timesteps
 
 
         
-class NonOverlappingGraphFactorGenerator(GraphFactorGenerator):
-    def __init__(self, graph_params, num_timesteps, generators, init_kwargs):
+class NonOverlappingNetworkFactorGenerator(NetworkFactorGenerator):
+    def __init__(self, network_params, num_timesteps, generators, init_kwargs):
 
         self.num_components = len(generators)
         assert self.num_components == len(init_kwargs)
 
-        self.graph = graph_params['graph_type'](**graph_params['graph_kwargs'])
+        self.network = network_params['network_type'](**network_params['network_kwargs'])
 
-        self.graphs = self.graph.generate_pieces(num_pieces=self.num_components)
+        self.networks = self.network.generate_pieces(num_pieces=self.num_components)
 
         self.generators = [
-            Generator(graph_pice, **kwargs) for graph_pice, (Generator, kwargs) in zip(self.graphs, generators)
+            Generator(network_pice, **kwargs) for network_pice, (Generator, kwargs) in zip(self.networks, generators)
         ]
         self.init_kwargs = init_kwargs
         self.num_timesteps = num_timesteps
 
 
-class RandomGraphFactorGenerator:
+class RandomNetworkFactorGenerator:
     def __init__(self, num_timesteps, num_nodes, num_components, mean=0, std=0.1, use_parafac2=True, phi_off_diags=None):
         """
-        graph_params : {'graph_type': Graph, 'graph_kwargs': {<KWARGS>}}
+        network_params : {'network_type': Network, 'network_kwargs': {<KWARGS>}}
         """
         self.mean = mean
         self.std = std
@@ -361,7 +361,7 @@ class RandomGraphFactorGenerator:
             return np.linalg.cholesky(phi)
         return np.random.randn(self.num_components, self.num_components)*self.std + self.mean
 
-    def generate_parafac2_graph(self):
+    def generate_parafac2_network(self):
         factor_blueprint = self.generate_factor_blueprint()
         factors = []
         for t in range(self.num_timesteps):
@@ -371,20 +371,18 @@ class RandomGraphFactorGenerator:
 
     def generate_factors(self):
         if self.use_parafac2:
-            return self.generate_parafac2_graph()
+            return self.generate_parafac2_network()
         else:
             return np.random.randn(self.num_nodes, self.num_components, self.num_timesteps)*self.std + self.mean
 
 
 if __name__ == "__main__":
-
-
     np.random.seed(0)
     #random.seed(0)
-    g = Graph(10, 10)
+    g = Network(10, 10)
 
-    sb = ShiftedSubGraph(g)
-    sb.init_subgraph(3)
+    sb = ShiftedSubNetwork(g)
+    sb.init_subnetwork(3)
 
     # print(sb.chunks)
 
