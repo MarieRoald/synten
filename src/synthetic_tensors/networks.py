@@ -1,3 +1,6 @@
+"""
+Network-structure PARAFAC2 components
+"""
 from copy import copy
 import numpy as np
 # import random
@@ -5,6 +8,8 @@ import numpy as np
 
 class Network:
     def __init__(self, num_nodes, num_chunks):
+        """Initiate a chunked network with non-overlapping chunks.
+        """
         self.num_nodes = num_nodes
         self.active_nodes = num_nodes
 
@@ -57,16 +62,6 @@ class NetworkPiece(Network):
 
     def generate_idxes(self):
         return np.arange(self.start_idx, self.start_idx+self.num_nodes)
-
-
-class ShiftedNetwork:
-
-    def __init__(self, network):
-        self.network = network
-
-    def evolve_one_step(self):
-        #?
-        pass
 
 
 class SubNetwork:
