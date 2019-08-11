@@ -1,15 +1,42 @@
 """
-Network-structure PARAFAC2 components
+Network-structure tensor components
+
+---------------
+Network classes
+---------------
+
+The purpose of the network classes is to provide node indices and
+node chunks to the subnetwork classes, which again generate the
+evolving tensor components.
+
+A network consists of a set of chunks, which are goups of nodes
+that have correlated behaviour.
+
+A network is a network piece whose indices start at zero.
+
+A network can generate network pieces (which are again networks).
+ - This is done to create non-overlapping subnetworks
+
+------------------
+Subnetwork classes
+------------------
+
+A subnetwork has a network piece which it adopts node-indexes from.
+
+A subnetwork can generate tensor components drawn from a random 
+distribution parametrised by its its inner state.
+
+A subnetwork can evolve its inner state by single timesteps.
 """
 from copy import copy
 import numpy as np
 # import random
 
 
-class Network:
-    def __init__(self, num_nodes, num_chunks):
-        """Initiate a chunked network with non-overlapping chunks.
-        """
+class NetworkPiece:
+    # TODO: kanskje Network heller skal arve denne?
+    def __init__(self, start_idx, num_nodes, num_chunks):
+        self.start_idx = start_idx
         self.num_nodes = num_nodes
         self.active_nodes = num_nodes
 
@@ -26,9 +53,11 @@ class Network:
         return sorted(list(set().union(*self.chunks)))
 
     def generate_idxes(self):
-        return np.arange(self.num_nodes)
+        return np.arange(self.start_idx, self.start_idx+self.num_nodes)
 
     def generate_chunks(self, num_chunks, shuffle=False):
+        """Separate the node-indices into the correct chunks.
+        """
         idxes = self.generate_idxes()
 
         if shuffle:
@@ -39,11 +68,19 @@ class Network:
         return [set(idxes[i*nodes_per_chunk:(i+1)*nodes_per_chunk]) for i in range(num_chunks)]
 
     def get_random_chunk_idx(self, n):
-        return np.random.choice(list(range(len(self.chunks))), n, replace=False)
+        """Get ``n`` random chunk indexes.
+        """
+        chunk_indexes = list(range(len(self.chunks)))
+        return np.random.choice(chunk_indexes, n, replace=False)
     
     def generate_pieces(self, num_pieces):
+        """Separate the network into non-overlapping network pieces.
+
+        Each piece corresponds to one tensor component.
+        """
         network_pieces = []
         chunks_per_piece = self.num_chunks//num_pieces
+
         for i in range(num_pieces):
             network_piece = copy(self)
             network_piece.chunks = network_piece.chunks[i*chunks_per_piece:(i+1)*chunks_per_piece]
@@ -53,15 +90,11 @@ class Network:
         return network_pieces
 
 
-class NetworkPiece(Network):
-    # TODO: kanskje Network heller skal arve denne?
-    def __init__(self, start_idx, num_nodes, num_chunks):
-        self.start_idx = start_idx
-
-        super().__init__(num_nodes, num_chunks)
-
-    def generate_idxes(self):
-        return np.arange(self.start_idx, self.start_idx+self.num_nodes)
+class Network(NetworkPiece):
+    def __init__(self, num_nodes, num_chunks):
+        """Initiate a chunked network with non-overlapping chunks.
+        """
+        super().__init__(0, num_nodes, num_chunks)
 
 
 class SubNetwork:
@@ -69,6 +102,8 @@ class SubNetwork:
         self.network = network
 
     def init_subnetwork(self, init_size, prob_adding=1, prob_removing=1):
+        """Set subnetwork parameters and set its inner state.
+        """
         self.chunk_idxs = self.network.get_random_chunk_idx(init_size)
         chunk_weight = 1
         self.chunk_idxs = {c: chunk_weight for c in self.chunk_idxs}
@@ -78,19 +113,8 @@ class SubNetwork:
         self.prob_removing = prob_removing
         self.prob_readding = prob_removing
 
-    def add_chunk_(self):
-        # TODO: sikkert bedre måte å gjøre dette enn en for-løkke
-        # TODO: skal man kunne ha en liten sjanse for å legge til prev removed?
-
-        selected = self.network.get_random_chunk_idx(1)[0]
-
-        while (selected in self.chunks or selected in self.previously_removed):
-            selected = self.network.get_random_chunk_idx(1)[0] 
-        
-        self.chunks.append(selected)
-
     def add_chunk(self):
-        """Adds a random chunk to the subnetwork.
+        """Activates a random chunk.
         """
         # TODO: skal man kunne ha en liten sjanse for å legge til prev removed?
         chunk_idxs = set(range(self.network.num_chunks))
@@ -106,7 +130,7 @@ class SubNetwork:
         self.chunk_idxs[added] = 1
 
     def remove_chunk(self):
-        """Removes a random chunk to the subnetwork.
+        """Deactivates a random chunk in the subnetwork.
         """
         if len(self.chunk_idxs) > 0:
             removed = np.random.choice(list(self.chunk_idxs.keys()))
@@ -128,19 +152,14 @@ class SubNetwork:
             self.remove_chunk()
 
     def evolve_one_step(self):
+        """Evolve the sub-network one step.
+        """
         self.remove_phase()
         self.add_phase()
   
     def get_factor_column(self, debug=False):
-        if debug:
-            factor_column = np.zeros((self.network.num_nodes))
-
-            for chunk_idx, chunk_strength in self.chunk_idxs.items():
-                chunk = self.network.chunks[chunk_idx]
-                for idx in chunk:
-                    factor_column[idx] = chunk_strength
-            return factor_column
-
+        """Generate a single random static tensor factor based on the subnetworks inner state.
+        """
         factor_column = np.random.standard_normal((self.network.num_nodes))*0.1 + 0.2
 
         for chunk_idx, chunk_strength in self.chunk_idxs.items():
@@ -155,7 +174,9 @@ class SubNetwork:
     def chunks(self):
         return [self.network.chunks[idx] for idx in self.chunk_idxs]
 
+
 class SmoothSubNetwork(SubNetwork):
+    # This was added to test some other functionality and is not really used.
     #TODO: istedet for å ha chunk_idxs må vi ha to dicts en for om den er aktiv og en for styrke
     #TODO: legg til en weight update fase
 
@@ -227,8 +248,9 @@ class SmoothSubNetwork(SubNetwork):
             #self.chunk_weight[node] = (self.r+1)*self.chunk_weight[node] - self.r*self.chunk_weight[node]**2/self.K
 
 
-
 class ShiftedSubNetwork(SubNetwork):
+    """A subnetwork that has a probability of shifting its indices.
+    """
     def init_subnetwork(self, init_size, prob_shifting=0.5, prob_adding=0, prob_removing=0):
         self.prob_shifting = prob_shifting
         self.shift = 0
@@ -264,7 +286,6 @@ class ShiftedSubNetwork(SubNetwork):
         return factor_column
 
 
-
 class NetworkFactorGenerator:
     def __init__(self, network_params, num_timesteps, generators, init_kwargs):
         """
@@ -292,43 +313,17 @@ class NetworkFactorGenerator:
         return np.array(components).transpose(2,0,1)
 
 
-class NonOverlappingNetworkFactorGenerator_old(NetworkFactorGenerator):
-    def __init__(self, num_nodes, num_chunks, num_timesteps, generators, init_kwargs):
-
-        self.num_components = len(generators)
-        assert self.num_components == len(init_kwargs)
-
-        num_nodes_in_piece = num_nodes//self.num_components
-        num_chunks_in_piece = num_chunks//self.num_components
-
-        self.networks = []
-        self.generators = []
-
-
-        for r in range(self.num_components):
-            self.networks.append(NetworkPiece(start_idx=r*num_nodes_in_piece, 
-                                          num_nodes=num_nodes_in_piece, 
-                                          num_chunks=num_chunks_in_piece))
-
-
-        self.generators = [
-            Generator(network_pice, **kwargs) for network_pice, (Generator, kwargs) in zip(self.networks, generators)
-        ]
-        self.init_kwargs = init_kwargs
-        self.num_timesteps = num_timesteps
-
-
-        
 class NonOverlappingNetworkFactorGenerator(NetworkFactorGenerator):
     def __init__(self, network_params, num_timesteps, generators, init_kwargs):
+        assert len(generators) == len(init_kwargs), "Need the same number of generators as init keyword arguments"
 
         self.num_components = len(generators)
-        assert self.num_components == len(init_kwargs)
 
+        # Generate overarching network and non-overlapping network pieces
         self.network = network_params['network_type'](**network_params['network_kwargs'])
-
         self.networks = self.network.generate_pieces(num_pieces=self.num_components)
 
+        # Create the subnetworks
         self.generators = [
             Generator(network_pice, **kwargs) for network_pice, (Generator, kwargs) in zip(self.networks, generators)
         ]
