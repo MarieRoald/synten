@@ -1,5 +1,6 @@
 from sklearn.datasets import make_classification
 
+
 class ClusterFactors:
     def __init__(self, num_samples, num_components):
         self.num_samples = num_samples
@@ -23,8 +24,6 @@ class ClusterFactors:
 
         self.factor_matrix = A
         self.classes = A_class
-
-
 
 
 class ClusterFactorGenerator:
