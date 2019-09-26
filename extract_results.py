@@ -38,12 +38,15 @@ if __name__ == '__main__':
             print(f'    Dataset number: {dataset_num}')
             print(f'    Model: {model}')
             evaluator = ExperimentEvaluator(**cp_evaluator_params)
-            
-            for experiment_subfolder in sorted(filter(lambda x: x.is_dir(), Path(experiment_folder).iterdir())):
-            	print(f"Evaluating {experiment_subfolder}")	
-            	if not (experiment_subfolder / "summaries" / "summary.json").is_file():
+            folders = sorted(filter(lambda x: x.is_dir(), Path(experiment_folder).iterdir()))
+            for i, experiment_subfolder in enumerate(folders):
+                print(f"Evaluating {experiment_subfolder}")	
+                if not (experiment_subfolder / "summaries" / "summary.json").is_file():
             	    print(f"Skipping {experiment_subfolder}")
             	    continue
-		
-            	evaluator.evaluate_experiment(str(experiment_subfolder))
-
+                eval_results,_= evaluator.evaluate_experiment(str(experiment_subfolder),verbose=False)
+                experiment_row = experiment.copy()
+                experiment_row['attempt_num'] = i
+                for metric in eval_results:
+                    experiment_row.update(metric)
+                print(experiment_row)
