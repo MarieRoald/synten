@@ -1,6 +1,7 @@
 from pathlib import Path
 import argparse
 import json
+from tenkit_tools.evaluation.experiment_evaluator import ExperimentEvaluator
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -10,13 +11,14 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    experiments_folder = args.experiments_folder
-    experiments_folder = Path(experiments_folder)
+    experiments_folder = Path(args.experiments_folder)
 
-    #with open(args.cp_evaluator_params) as f:
-    #    cp_evaluator_params = json.load(f)
-    #with open(args.parafac2_evaluator_params) as f:
-    #    parafac2_evaluator_params = json.load(f)
+    with open(args.cp_evaluator_params) as f:
+        cp_evaluator_params = json.load(f)
+    with open(args.parafac2_evaluator_params) as f:
+        parafac2_evaluator_params = json.load(f)
+
+
 
     for experiment_folder in sorted(experiments_folder.glob('*')):
             A_setup, B_setup, C_setup, dataset_num, model = experiment_folder.stem.split('_')
@@ -35,14 +37,13 @@ if __name__ == '__main__':
             print(f'    C setup: {C_setup}')
             print(f'    Dataset number: {dataset_num}')
             print(f'    Model: {model}')
-         
-            print('Calculate_metrics....')
+            evaluator = ExperimentEvaluator(**cp_evaluator_params)
             
-            print(f"Evaluating {experiment}")
-            if not (experiment / "summaries" / "summary.json").is_file():
-                print(f"Skipping {experiment}")
-                continue
-            #evaluator.evaluate_experiment(str(experiment))
+            for experiment_subfolder in sorted(filter(lambda x: x.is_dir(), Path(experiment_folder).iterdir())):
+            	print(f"Evaluating {experiment_subfolder}")	
+            	if not (experiment_subfolder / "summaries" / "summary.json").is_file():
+            	    print(f"Skipping {experiment_subfolder}")
+            	    continue
+		
+            	evaluator.evaluate_experiment(str(experiment_subfolder))
 
-
-            print('Calculate_metrics....')
