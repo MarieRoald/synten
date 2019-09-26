@@ -22,7 +22,7 @@ DECOMPOSITION_PARAMS = {
             "max_its": 8000,
             "checkpoint_frequency": 100,
             "convergence_tol": 1e-8,
-            "non_negativity_constraints": [False, False, True]
+            "non_negativity_constraints": [False, False, True],
         }
     },
     'parafac2': {
@@ -31,7 +31,8 @@ DECOMPOSITION_PARAMS = {
             "max_its": 8000,
             "checkpoint_frequency": 100,
             "convergence_tol": 1e-8,
-            "non_negativity_constraints": [False, False, True]
+            "non_negativity_constraints": [False, False, True],
+            "print_frequency": -1,
         }
     }
 }
@@ -76,11 +77,13 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs):
     """Run num_runs CP and PARAFAC2 decomposition with the specified
     data tensor (filename) and experiment folder (path).
     """
+    print(data_tensor_name)
     save_path = Path(experiment_folder)/'experiments'
     tensor_path = Path(experiment_folder)/'datasets'/data_tensor_name
     tensor_stem = Path(data_tensor_name).stem
 
     for decomposition in ['cp', 'parafac2']:
+        print(decomposition)
         experiment_params = {
             'save_path': f'{save_path}',
             'num_runs': num_runs,
