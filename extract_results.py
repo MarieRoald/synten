@@ -7,13 +7,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 
-    experiments_folder = args["experiments_folder"]
+    experiments_folder = args.experiments_folder
     experiments_folder = Path(experiments_folder)
     for experiment_folder in experiments_folder.glob('*'):
             A_setup, B_setup, C_setup, dataset_num, model = experiment_folder.stem.split('_')
 
             experiment = {}
-            experiment['experiment_name'] = experiment_folder.step
+            experiment['experiment_name'] = experiment_folder.stem
             experiment['A_setup'] = A_setup
             experiment['B_setup'] = B_setup
             experiment['C_setup'] = C_setup
