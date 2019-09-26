@@ -1,4 +1,5 @@
 from synten.decomposition_generator import *
+from pathlib import Path
 
 
 if __name__ == '__main__':
@@ -79,8 +80,44 @@ if __name__ == '__main__':
                 'c': 0,
                 'd': 2.1
             }
+        },
+        ]},
+    
+
+        'random': {
+        'component_params': [
+        {
+            'type': "RandomTimeComponent",
+            'kwargs': {
+                'low': 1.1,
+                'high': 2
+            }
+        },
+        {
+            'type': "RandomTimeComponent",
+            'kwargs': {
+                'low': 1.1,
+                'high': 2
+            }
+        },
+        {
+            'type': "RandomTimeComponent",
+            'kwargs': {
+                'low': 1.1,
+                'high': 2
+            }
+        },
+        {
+            'type': "RandomTimeComponent",
+            'kwargs': {
+                'low': 1.1,
+                'high': 2
+            }
         }
-    ]
+        ]
         },
     }
-    generate_many_datasets(rank_4_clusters, rank_4_networks, rank_4_timeseries, shape, 4, 'jall', 20)
+    
+    experiment_path = Path('experiment/datasets')
+    experiment_path.mkdir(parents=True, exist_ok=True)
+    generate_many_datasets(rank_4_clusters, rank_4_networks, rank_4_timeseries, shape, 4, str(experiment_path), 20)
