@@ -42,10 +42,10 @@ LOG_PARAMS = [
 ]
 
 
-def run_experiments(experiment_folder, rank, num_runs):
+def run_experiments(experiment_folder, rank, num_runs, noise_level, glob_pattern='*'):
     experiment_folder = Path(experiment_folder)
-    for tensor_path in sorted((experiment_folder/'datasets/').iterdir()):
-        run_decompositions(tensor_path.name, experiment_folder, rank, num_runs)
+    for tensor_path in sorted((experiment_folder/'datasets/').glob(glob_pattern)):
+        run_decompositions(tensor_path.name, experiment_folder, rank, num_runs, noise_level)
     # hente num_runs og tol fra experiments_parameters
     # Er det å ikke bruke tkt å finne opp hjulet?
     # iterer over alle dataset i mappa (og undermapper?)
@@ -73,7 +73,7 @@ def copy_best_run(experiment, save_path):
     shutil.copy(best_run, save_path)
 
 
-def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs):
+def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, noise_level):
     """Run num_runs CP and PARAFAC2 decomposition with the specified
     data tensor (filename) and experiment folder (path).
     """
@@ -89,6 +89,12 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs):
             'num_runs': num_runs,
             'experiment_name': f'{tensor_stem}_{decomposition}'
         }
+        preprocessor_params = [
+            "type": "AddNoise",
+            "arguments": {
+                "noise_level": noise_level
+            }
+        ]
         decomposition_params = DECOMPOSITION_PARAMS[decomposition]
         decomposition_params['arguments']['rank'] = rank
         
@@ -97,10 +103,10 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs):
             data_reader_params=get_datareader_params(tensor_path),
             decomposition_params=decomposition_params,
             log_params=LOG_PARAMS,
-            preprocessor_params=[],
+            preprocessor_params=preprocessor_params,
             load_id=None,
         )
         experiment.run_experiments()
 
-        best_run_filename = Path(experiment_folder)/'best_run'/f'{tensor_stem}_{decomposition}.h5'
+        best_run_filename = Path(experiment_folder)/'best_run'/f'{tensor_stem}_{decomposition}_noise_{noise_level}.h5'
         copy_best_run(experiment, best_run_filename)
