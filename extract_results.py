@@ -60,7 +60,8 @@ if __name__ == '__main__':
                     experiment_row.update(metric)
                 print(experiment_row)
 
-                with open(output_file, 'a') as f:
+                open_mode = 'w' if num_rows == 0 else 'a'
+                with (experiments_folder.parent/'results.csv').open(open_mode) as f:
                     writer = DictWriter(f, fieldnames=list(experiment_row.keys()))
                     if num_rows == '0':
                         writer.writeheader()
