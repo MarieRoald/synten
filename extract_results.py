@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
             dataset_file = experiments_folder.parent/'datasets'/'_'.join(str(experiment_folder.stem).split('_')[:-1])
             cp_evaluator_params['single_run_evaluator_params'].append({
-                "type":"SeperateModeEvolvingFMS",
+                "type":"SeparateModeEvolvingFMS",
                 "arguments": {
                     "evolving_tensor": str(dataset_file),
                     "internal_path": "evolving_tensor"
