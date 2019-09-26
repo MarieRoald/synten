@@ -183,10 +183,10 @@ class TrigTimeComponent(BaseTimeComponent):
         return self.a*np.sin(self.b*self.t + self.c) + self.d
 
 
-class TimeSeriesFactorGenerator:
-    def __init__(self, num_timesteps, components, random_state=None):
+class TimeSeriesGenerator:
+    def __init__(self, num_timesteps, component_params, random_state=None):
         """
-        components : [
+        component_params : [
             {
                 "type": "ExponentialTimeFactor",
                 "kwargs": {"a": 1, "b": 2, "c": 0}
@@ -194,14 +194,14 @@ class TimeSeriesFactorGenerator:
             ...
         ]
         """
-        self.components = components
+        self.component_params = component_params
         self.num_timesteps = num_timesteps
         self.random_state = random_state
 
     def generate_factors(self):
         factors = []
         rng = check_random_state(self.random_state)
-        for component_parameters in self.components:
+        for component_parameters in self.component_params:
             component_name = component_parameters["type"]
             component_kwargs = component_parameters.get("kwargs", {})
             component_generator = time_factor_register[component_name](random_state=rng, **component_kwargs)
