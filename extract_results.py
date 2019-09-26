@@ -2,6 +2,7 @@ from pathlib import Path
 import argparse
 import json
 from tenkit_tools.evaluation.experiment_evaluator import ExperimentEvaluator
+from csv import DictWriter
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -19,7 +20,7 @@ if __name__ == '__main__':
         parafac2_evaluator_params = json.load(f)
 
 
-
+    num_rows = 0
     for experiment_folder in sorted(experiments_folder.glob('*')):
             A_setup, B_setup, C_setup, dataset_num, model = experiment_folder.stem.split('_')
 
@@ -37,6 +38,14 @@ if __name__ == '__main__':
             print(f'    C setup: {C_setup}')
             print(f'    Dataset number: {dataset_num}')
             print(f'    Model: {model}')
+
+            dataset_file = experiments_folder.parent/'datasets'/'_'.join(str(experiment_folder).split('_')[:-1])
+            if "SeperateModeEvolvingFMS" in cp_evaluator_params['single_run_evaluator_params']:
+                cp_evaluator_params["single_run_evaluator_params"]["SeperateModeEvolvingFMS"]["arguments"] = {
+                    "evolving_tensor": str(dataset_file),
+                    "internal_path": "evolving_tensor"
+                }
+
             evaluator = ExperimentEvaluator(**cp_evaluator_params)
             folders = sorted(filter(lambda x: x.is_dir(), Path(experiment_folder).iterdir()))
             for i, experiment_subfolder in enumerate(folders):
@@ -50,3 +59,12 @@ if __name__ == '__main__':
                 for metric in eval_results:
                     experiment_row.update(metric)
                 print(experiment_row)
+
+                open_mode = 'w' if num_rows == 0 else 'a'
+                with (experiments_folder.parent/'results.csv').open(open_mode) as f:
+                    writer = DictWriter(f, fieldnames=list(experiment_row.keys()))
+                    if num_rows == '0':
+                        writer.writeheader()
+                    writer.writerow(experiment_row)
+                    num_rows += 1
+
