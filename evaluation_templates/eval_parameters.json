@@ -7,6 +7,17 @@
           {   
               "type": "ExplainedVariance",
               "arguments": {}
+          },
+          {
+              "type": "MaxKMeansAcc",
+              "arguments": {
+                   "mode":2,
+                   "class_name": "class"
+              }
+          },
+          {
+              "type": "SeperateModeEvolvingFMS",
+              "arguments": {}
           }
 
     ],
