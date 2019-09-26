@@ -13,10 +13,10 @@ if __name__ == '__main__':
     experiments_folder = args.experiments_folder
     experiments_folder = Path(experiments_folder)
 
-    with open(args.cp_evaluator_params) as f:
-        cp_evaluator_params = json.load(f)
-    with open(args.parafac2_evaluator_params) as f:
-        parafac2_evaluator_params = json.load(f)
+    #with open(args.cp_evaluator_params) as f:
+    #    cp_evaluator_params = json.load(f)
+    #with open(args.parafac2_evaluator_params) as f:
+    #    parafac2_evaluator_params = json.load(f)
 
     for experiment_folder in sorted(experiments_folder.glob('*')):
             A_setup, B_setup, C_setup, dataset_num, model = experiment_folder.stem.split('_')
