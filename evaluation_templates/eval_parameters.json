@@ -1,0 +1,15 @@
+{
+    "single_run_evaluator_params": [
+          {   
+              "type": "FinalLoss",
+              "arguments": {}
+          },
+          {   
+              "type": "ExplainedVariance",
+              "arguments": {}
+          }
+
+    ],
+    "multi_run_evaluator_params": [],
+    "single_run_visualiser_params": []
+}
