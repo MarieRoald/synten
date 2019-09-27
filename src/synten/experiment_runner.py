@@ -101,6 +101,7 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
                 "arguments": {
                     "noise_level": noise_level
             }
+            }
         ]
         decomposition_params = DECOMPOSITION_PARAMS[decomposition]
         decomposition_params['arguments']['rank'] = rank
