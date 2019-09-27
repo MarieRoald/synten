@@ -39,7 +39,7 @@ if __name__ == '__main__':
             print(f'    Dataset number: {dataset_num}')
             print(f'    Model: {model}')
 
-            dataset_file = experiments_folder.parent/'datasets'/'_'.join(str(experiment_folder).split('_')[:-1])
+            dataset_file = experiments_folder.parent/'datasets'/'_'.join(str(experiment_folder.stem).split('_')[:-1])
             cp_evaluator_params['single_run_evaluator_params'].append({
                 "type":"SeparateModeEvolvingFMS",
                 "arguments": {
