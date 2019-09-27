@@ -90,9 +90,16 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
             'experiment_name': f'{tensor_stem}_{decomposition}'
         }
         preprocessor_params = [
-            "type": "AddNoise",
-            "arguments": {
-                "noise_level": noise_level
+            {
+                "type": "Transpose",
+                "arguments": {
+                    "permutation": [2, 1, 0]
+                }
+            },
+            {
+                "type": "AddNoise",
+                "arguments": {
+                    "noise_level": noise_level
             }
         ]
         decomposition_params = DECOMPOSITION_PARAMS[decomposition]
