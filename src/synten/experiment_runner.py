@@ -59,9 +59,9 @@ def get_datareader_params(tensor_path):
         "arguments": {
             "file_path": str(tensor_path),
             "meta_info_path": str(tensor_path),
-            "mode_names": ["samples", "nodes", "time"],
+            "mode_names": ["time", "nodes", "samples"],
             "tensor_name": "dataset/tensor",
-            "classes": [{"class": "dataset/classes"}, {}, {}]
+            "classes": [{}, {}, {"class": "dataset/classes"},]
         }
     }
 
