@@ -4,7 +4,7 @@ To generate the components, clone the repository and run
 
     pip install .
 
-to install the synten library and then (modify and) run
+to install the synten library with its dependencies and then (modify as needed and) run
 
     python generate_components.py
 
