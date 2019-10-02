@@ -4,19 +4,16 @@
               "type": "FinalLoss",
               "arguments": {}
           },
+          {
+                "type": "MaxKMeansAcc",
+                "arguments": {
+                    "mode": 0,
+                    "class_name": "class",
+                    "sklearn": true
+                }
+          },
           {   
               "type": "ExplainedVariance",
-              "arguments": {}
-          },
-          {
-              "type": "MaxKMeansAcc",
-              "arguments": {
-                   "mode":2,
-                   "class_name": "class"
-              }
-          },
-          {
-              "type": "SeperateModeEvolvingFMS",
               "arguments": {}
           }
 

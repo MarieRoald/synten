@@ -6,7 +6,7 @@ if __name__ == '__main__':
     shape = (40, 50, 60)
     rank_4_clusters =  {
         'clustering': {
-                'num_informative_components': None,
+                'num_informative_components': 4,
                 'class_sep': 2
         }
     }
@@ -118,6 +118,6 @@ if __name__ == '__main__':
         },
     }
     
-    experiment_path = Path('experiment/datasets')
+    experiment_path = Path('experiments/datasets')
     experiment_path.mkdir(parents=True, exist_ok=True)
     generate_many_datasets(rank_4_clusters, rank_4_networks, rank_4_timeseries, shape, 4, str(experiment_path), 20)

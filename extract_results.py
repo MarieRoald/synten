@@ -19,7 +19,6 @@ if __name__ == '__main__':
     with open(args.parafac2_evaluator_params) as f:
         parafac2_evaluator_params = json.load(f)
 
-
     num_rows = 0
     for experiment_folder in sorted(experiments_folder.glob('*')):
             A_setup, B_setup, C_setup, dataset_num, model = experiment_folder.stem.split('_')
@@ -65,7 +64,7 @@ if __name__ == '__main__':
                 open_mode = 'w' if num_rows == 0 else 'a'
                 with (experiments_folder.parent/'results.csv').open(open_mode) as f:
                     writer = DictWriter(f, fieldnames=list(experiment_row.keys()))
-                    if num_rows == '0':
+                    if num_rows == 0:
                         writer.writeheader()
                     writer.writerow(experiment_row)
                     num_rows += 1
