@@ -67,7 +67,7 @@ def generate_dataset(
         num_components,
         random_state=random_state
     )
-    tensor = evolving_tensor.construct_tensor()
+    tensor = np.array(evolving_tensor.construct_slices())
 
     with h5py.File(save_path,'w') as hdf5_file:
         evolving_tensor_group = hdf5_file.create_group('evolving_tensor')
