@@ -3,7 +3,7 @@ from pathlib import Path
 
 
 if __name__ == '__main__':
-    shape = (40, 50, 60)
+    shape = (40, 160, 50)
     rank_4_clusters =  {
         'clustering': {
                 'num_informative_components': 4,
@@ -17,9 +17,9 @@ if __name__ == '__main__':
             {
                 'component_params': [
                     {
-                        'init_size': 10,
-                        'prob_adding': 0.01,
-                        'prob_removing':10/shape[2]
+                        'init_size': shape[1]//4//2,
+                        'prob_adding': shape[1]/10/shape[2],
+                        'prob_removing':shape[1]/5/shape[2]
                     },
                     {
                         'init_size': 10,
@@ -28,14 +28,15 @@ if __name__ == '__main__':
                         'prob_removing': 0
                     },
                     {
-                        'init_size': 3,
-                        'prob_adding': (shape[1]//4-10)/shape[2],
+                        'init_size': 10,
+                        'prob_adding': 0.8*(shape[1]//4-10)/shape[2],
                         'prob_removing': 0
                     },
                     {
-                        'init_size': 8,
+                        'init_size': 5,
                         'prob_adding': (shape[1]//4-10)/shape[2],
-                        'prob_removing': 0
+                        'prob_removing': (shape[1]//4-10)/shape[2]//5,
+                        'prob_shifting': 0.5
                     }
                 ]
             },
@@ -82,7 +83,7 @@ if __name__ == '__main__':
             }
         },
         ]},
-    
+
 
         'random': {
         'component_params': [
@@ -118,6 +119,6 @@ if __name__ == '__main__':
         },
     }
     
-    experiment_path = Path('experiments/datasets')
+    experiment_path = Path('experiments_many_nodes/datasets')
     experiment_path.mkdir(parents=True, exist_ok=True)
     generate_many_datasets(rank_4_clusters, rank_4_networks, rank_4_timeseries, shape, 4, str(experiment_path), 20)
