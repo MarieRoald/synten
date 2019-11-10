@@ -110,7 +110,7 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
             },
             {
                 "type": "Transpose",
-                "arguments": {"permutation": [2, 1, 0]}
+                "arguments": {"permutation": [1, 0, 2]}
             }
         ]
         decomposition_params = DECOMPOSITION_PARAMS[decomposition]
