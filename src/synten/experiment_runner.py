@@ -23,7 +23,8 @@ DECOMPOSITION_PARAMS = {
             "checkpoint_frequency": 100,
             "convergence_tol": 1e-8,
             "non_negativity_constraints": [False, True, True],
-            "signal_to_noise": -17
+            "signal_to_noise": 3.8,
+            "init": "parafac2"
         }
     },
     'cp': {
