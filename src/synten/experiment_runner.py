@@ -16,6 +16,16 @@ from tenkit_tools.experiment import Experiment
 
 
 DECOMPOSITION_PARAMS = {
+    'flexible_parafac2': {
+        "type": "FlexibleParafac2_ALS",
+        "arguments": {
+            "max_its": 8000,
+            "checkpoint_frequency": 100,
+            "convergence_tol": 1e-8,
+            "non_negativity_constraints": [False, True, True],
+            "signal_to_noise": -17
+        }
+    },
     'cp': {
         "type": "CP_ALS",
         "arguments": {
@@ -34,11 +44,13 @@ DECOMPOSITION_PARAMS = {
             "non_negativity_constraints": [False, False, True],
             "print_frequency": -1,
         }
-    }
+    },
 }
 LOG_PARAMS = [
     {"type": "LossLogger"},
-    {"type": "ExplainedVarianceLogger"}
+    {"type": "ExplainedVarianceLogger"},
+    {"type": "CouplingErrorLogger", "arguments": {"not_flexible_ok": True}},
+    {"type": "Parafac2ErrorLogger", "arguments": {"not_flexible_ok": True}},
 ]
 
 
@@ -82,7 +94,7 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
     tensor_path = Path(experiment_folder)/'datasets'/data_tensor_name
     tensor_stem = Path(data_tensor_name).stem
 
-    for decomposition in ['cp', 'parafac2']:
+    for decomposition in DECOMPOSITION_PARAMS:
         print(decomposition)
         experiment_params = {
             'save_path': f'{save_path}',
@@ -98,7 +110,7 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
             },
             {
                 "type": "Transpose",
-                "arguments": {"permutation": [1, 0, 2]}
+                "arguments": {"permutation": [2, 1, 0]}
             }
         ]
         decomposition_params = DECOMPOSITION_PARAMS[decomposition]
