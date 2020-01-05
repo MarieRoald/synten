@@ -17,7 +17,8 @@ def generate_sigmoid_images(
     #all_positions = list(itertools.product((int(image_shape[0]/4), int(3*image_shape[0]/4)), repeat=2)),
     all_positions = [(0.5, 1/3), (0.5, 2/3)],
     shift_probability = 0.1,
-    speed = 1
+    speed = 1,
+    blur_size=1
 ):
     carrying_capacity = max_r - min_r
     return {
@@ -26,7 +27,7 @@ def generate_sigmoid_images(
         'overlap': True,
         'component_params': [
                     {
-                'blur_size': 1,
+                'blur_size': blur_size,
                 'radius_parameters': {
                     'type': 'sigmoidal',
                     'arguments': {
@@ -68,10 +69,10 @@ def generate_sigmoid_images(
 if __name__ == '__main__':
     # shape = (40, 160, 50)
     num_timesteps = 5
-    image_shape = (20, 20)
+    image_shape = (25, 25)
     num_subjects = 40
     shape = (num_subjects, np.prod(image_shape), num_timesteps)
-    shift_probabilities = [0, 0.25, 0.5, 0.75, 1]
+    shift_probabilities = [0.5, 0.75, 1]
     speeds = [1, 2, 4]
 
 
