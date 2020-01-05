@@ -84,7 +84,7 @@ if __name__ == '__main__':
     }
 
     rank_2_networks = {
-        f'image_shift_{shift_probability}_speed_{speed}': [
+        f'image_shift_{shift_probability}_speed_{speed}'.replace('.', '_'): [
             'ImageComponentGenerator',
             generate_sigmoid_images(num_timesteps, image_shape, shift_probability=shift_probability, speed=speed),
         ]
@@ -114,6 +114,6 @@ if __name__ == '__main__':
         ]},
     }
     
-    experiment_path = Path('smooth_experiments_first_test/datasets')
+    experiment_path = Path('smooth_experiments_third_test/datasets')
     experiment_path.mkdir(parents=True, exist_ok=True)
     generate_many_datasets(rank_2_clusters, rank_2_networks, rank_2_timeseries, shape, 2, str(experiment_path), 1)
