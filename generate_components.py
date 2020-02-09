@@ -41,11 +41,37 @@ if __name__ == '__main__':
                 ]
             },
         ],
-        'random': [
-            'RandomNetworkGenerator',
-            {
-            }
-        ]
+       # 'network': [
+       #     'EvolvingNetworksGenerator',
+       #     {
+       #         'component_params': [
+       #             {
+       #                 'init_size': shape[1]//4//2,
+       #                 'prob_shifting': 1,
+       #                 'prob_adding': 0,
+       #                 'prob_removing': 0
+       #             },
+       #             {
+       #                 'init_size': 10,
+       #                 'prob_shifting': 1,
+       #                 'prob_adding': 0,
+       #                 'prob_removing': 0
+       #             },
+       #             {
+       #                 'init_size': 10,
+       #                 'prob_shifting': 0.5,
+       #                 'prob_adding': 0,
+       #                 'prob_removing': 0
+       #             },
+       #             {
+       #                 'init_size': 5,
+       #                 'prob_shifting': 0.5,
+       #                 'prob_adding': 0,
+       #                 'prob_removing': 0
+       #             }
+       #         ]
+       #     },
+       # ],
     }
 
     rank_4_timeseries = {
@@ -83,42 +109,8 @@ if __name__ == '__main__':
             }
         },
         ]},
-
-
-        'random': {
-        'component_params': [
-        {
-            'type': "RandomTimeComponent",
-            'kwargs': {
-                'low': 1.1,
-                'high': 2
-            }
-        },
-        {
-            'type': "RandomTimeComponent",
-            'kwargs': {
-                'low': 1.1,
-                'high': 2
-            }
-        },
-        {
-            'type': "RandomTimeComponent",
-            'kwargs': {
-                'low': 1.1,
-                'high': 2
-            }
-        },
-        {
-            'type': "RandomTimeComponent",
-            'kwargs': {
-                'low': 1.1,
-                'high': 2
-            }
-        }
-        ]
-        },
     }
     
-    experiment_path = Path('experiments_many_nodes/datasets')
+    experiment_path = Path('admm_0/datasets')
     experiment_path.mkdir(parents=True, exist_ok=True)
     generate_many_datasets(rank_4_clusters, rank_4_networks, rank_4_timeseries, shape, 4, str(experiment_path), 20)

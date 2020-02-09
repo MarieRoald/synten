@@ -15,7 +15,7 @@ def generate_sigmoid_images(
     #all_inverted = [False, False, True, True],
     all_inverted = [False, True],
     #all_positions = list(itertools.product((int(image_shape[0]/4), int(3*image_shape[0]/4)), repeat=2)),
-    all_positions = [(0.5, 1/3), (0.5, 2/3)],
+    all_positions = [(1/3, 1/3), (2/3, 2/3)],
     shift_probability = 0.1,
     speed = 1,
     blur_size=1
@@ -115,6 +115,6 @@ if __name__ == '__main__':
         ]},
     }
     
-    experiment_path = Path('smooth_experiments_third_test/datasets')
+    experiment_path = Path('smooth_experiments_first_informed_test/datasets')
     experiment_path.mkdir(parents=True, exist_ok=True)
-    generate_many_datasets(rank_2_clusters, rank_2_networks, rank_2_timeseries, shape, 2, str(experiment_path), 1)
+    generate_many_datasets(rank_2_clusters, rank_2_networks, rank_2_timeseries, shape, 2, str(experiment_path), 3)
