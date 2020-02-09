@@ -1,6 +1,9 @@
 from pathlib import Path
+from itertools import product
 import shutil
 from tenkit_tools.experiment import Experiment
+from tenkit.decomposition.block_parafac2 import RLS, Parafac2ADMM, BlockParafac2
+from scipy.sparse import dok_matrix, csr_matrix
 # Skal denne fila være en del av synten?
 # eller en del av tkt?  
 
@@ -14,17 +17,147 @@ from tenkit_tools.experiment import Experiment
 #  -> experiments
 
 
+L = dok_matrix((25**2, 25**2))
+for i, L_i in enumerate(L):
+    if i - 25 >= 0:
+        L[i, i-25] = -1
+        L[i, i] += 1
+    if i + 25 < L.shape[0]:
+        L[i, i+25] = -1
+        L[i, i] += 1
+    if i - 1 >= 0:
+        L[i, i-1] = -1
+        L[i, i] = L[i, i] + 1
+    if i + 1 < L.shape[0]:
+        L[i, i+1] = -1
+        L[i, i] = L[i, i] + 1
+
+L = csr_matrix(L)
+
+
+FLEXIBLE_DECOMPOSITION_PARAMS = {
+    f'flexible_parafac2_coupling_{coupling}_smoothness_{smoothness}'.replace('.', '_'): {
+        "type": "FlexibleParafac2_ALS",
+        "arguments": {
+            "max_its": 8000,
+            "checkpoint_frequency": 100,
+            "convergence_tol": 1e-8,
+            "non_negativity_constraints": [False, False, True],
+            "coupling_strength": coupling,
+            "init": "parafac2",
+            "ridge_penalties": [smoothness*0.1, smoothness*0.1, smoothness*0.1],
+            "tikhonov_matrices": [None, smoothness*L, None]
+        }
+    }
+    for coupling, smoothness in product([30, 100, 300], [0.001, 0.33, 0.01])
+}
+
+
+FLEXIBLE_DECOMPOSITION_PARAMS = {
+    f'flexible_parafac2_cohen_coupling_{coupling_strength}_max_coupling_{max_coupling}'.replace('.', '_'): {
+        "type": "FlexibleParafac2_ALS",
+        "arguments": {
+            "max_its": 5000,
+            "checkpoint_frequency": 1000,
+            "convergence_tol": 1e-8,
+            "non_negativity_constraints": [False, False, True],
+            "coupling_strength": coupling_strength,
+            "max_coupling": max_coupling,
+            "init": "parafac2",
+        }
+    }
+    for coupling_strength, max_coupling in product([1e-4, 1e-3, 1e-2, 1e-1, 1, 1.8e1, 3e1, 5.6e1, 100], [10, 1e2, 1e4, 1e6, 1e8, 1e10])
+}
+
+    #for coupling_strength, max_coupling in product([1e-4, 1e-3, 1e-2, 1e-1, 1, 1.8e1, 3e1, 5.6e1, 100], [10, 1e2, 1e4, 1e6, 1e8, 1e10])
+
+ADMM_PARAFAC2_PARAMS = {
+    'parafac2_admm_auto_rho': {
+        "type": "BlockParafac2",
+        "arguments": {
+            "init": "random",
+            "checkpoint_frequency": 500,
+            "convergence_tol": 1e-8,
+            "max_its": 8000,
+            "sub_problems": [
+                RLS(mode=0),
+                Parafac2ADMM(rho=None, verbose=False, max_it=10),  # 0.2
+                RLS(mode=2, non_negativity=True),
+            ]
+        }
+    },
+   # 'parafac2_admm_0_02': {
+   #     "type": "BlockParafac2",
+   #     "arguments": {
+   #         "init": "random",
+   #         "checkpoint_frequency": 500,
+   #         "convergence_tol": 1e-8,
+   #         "max_its": 8000,
+   #         "sub_problems": [
+   #             RLS(mode=0),
+   #             Parafac2ADMM(rho=0.02, verbose=False, max_it=10),
+   #             RLS(mode=2, non_negativity=True),
+   #         ]
+   #     }
+   # }
+
+}
 
 DECOMPOSITION_PARAMS = {
-    'flexible_parafac2': {
+    **ADMM_PARAFAC2_PARAMS,
+#    'cp': {
+#        "type": "CP_ALS",
+#        "arguments": {
+#            "max_its": 8000,
+#            "checkpoint_frequency": 100,
+#            "convergence_tol": 1e-8,
+#            "non_negativity_constraints": [False, False, True],
+#        }
+#    },
+#    'parafac2': {
+#        "type": "Parafac2_ALS",
+#        "arguments": {
+#            "max_its": 8000,
+#            "checkpoint_frequency": 100,
+#            "convergence_tol": 1e-8,
+#            "non_negativity_constraints": [False, False, True],
+#            "print_frequency": -1,
+#        }
+#    },
+}
+
+DECOMPOSITION_PARAMS_OLD = {
+    'flexible_parafac2_001': {
         "type": "FlexibleParafac2_ALS",
         "arguments": {
             "max_its": 8000,
             "checkpoint_frequency": 100,
             "convergence_tol": 1e-8,
             "non_negativity_constraints": [False, True, True],
-            "signal_to_noise": 3.8,
-            "init": "parafac2"
+            "coupling_strength": 0.01,
+            "init": "cp"
+        }
+    },
+    'flexible_parafac2_01': {
+        "type": "FlexibleParafac2_ALS",
+        "arguments": {
+            "max_its": 8000,
+            "checkpoint_frequency": 100,
+            "convergence_tol": 1e-8,
+            "non_negativity_constraints": [False, True, True],
+            "coupling_strength": 0.1,
+            "init": "cp"
+        }
+    },
+    'flexible_parafac2_1': {
+        "type": "FlexibleParafac2_ALS",
+        "arguments": {
+            "max_its": 8000,
+            "checkpoint_frequency": 100,
+            "convergence_tol": 1e-8,
+            "non_negativity_constraints": [False, True, True],
+            "coupling_strength": 1,
+            "init": "cp"
         }
     },
     'cp': {
