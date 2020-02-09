@@ -7,7 +7,7 @@
           {
                 "type": "MaxKMeansAcc",
                 "arguments": {
-                    "mode": 0,
+                    "mode": 2,
                     "class_name": "class",
                     "sklearn": true
                 }
