@@ -237,6 +237,10 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
         }
         preprocessor_params = [
             {
+                "type": "GlobalScale",
+                "arguments": {}
+            },
+            {
                 "type": "AddNoise",
                 "arguments": {
                     "noise_level": noise_level
