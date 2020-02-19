@@ -294,6 +294,7 @@ class EvolvingNetworksGenerator(BaseEvolvingComponentsGenerator):
             chunk_size=None,
             non_overlapping=True,
             random_state=None,
+            non_negativity=False,
             **kwargs
         ):
         """
@@ -313,6 +314,7 @@ class EvolvingNetworksGenerator(BaseEvolvingComponentsGenerator):
         self.num_components = len(component_params)
         self.component_params = component_params
         self.random_state = random_state
+        self.non_negativity = non_negativity
 
         if num_chunks is None and chunk_size is None:
             num_chunks = num_nodes
@@ -342,7 +344,10 @@ class EvolvingNetworksGenerator(BaseEvolvingComponentsGenerator):
             generator.get_dynamic_factor(self.num_timesteps)
             for generator in self.generators
         ]
-        return np.array(components).transpose(1, 2, 0)
+        components = np.array(components).transpose(1, 2, 0)
+        if self.non_negativity:
+            components = np.maximum(0, components)
+        return components
 
 
 class RandomNetworkGenerator(BaseEvolvingComponentsGenerator):

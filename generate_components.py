@@ -15,6 +15,7 @@ if __name__ == '__main__':
         'network': [
             'EvolvingNetworksGenerator',
             {
+                'non_negativity': True,
                 'component_params': [
                     {
                         'init_size': shape[1]//4//2,
