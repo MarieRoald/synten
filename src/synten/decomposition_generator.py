@@ -5,6 +5,8 @@ from tenkit.decomposition.decompositions import EvolvingTensor
 from .timeseries import TimeSeriesGenerator
 from .clusters import ClusterGenerator
 from .networks import evolving_component_register
+from . import shifted_cp
+from . import images
 import numpy as np
 
 
