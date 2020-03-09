@@ -10,7 +10,15 @@ from .networks import BaseEvolvingComponentsGenerator
 
 
 class ShiftedCPNetworksGenerator(BaseEvolvingComponentsGenerator):
-    def __init__(self, num_components, num_timesteps, num_nodes, smoothing_factor=0, offset=0, random_state=None):
+    def __init__(
+        self,
+        num_components,
+        num_timesteps,
+        num_nodes,
+        smoothing_factor=0,
+        offset=0,
+        random_state=None
+    ):
         self.num_components = num_components
         self.num_timesteps = num_timesteps
         self.num_nodes = num_timesteps
