@@ -21,7 +21,7 @@ class ShiftedCPNetworksGenerator(BaseEvolvingComponentsGenerator):
     ):
         self.num_components = num_components
         self.num_timesteps = num_timesteps
-        self.num_nodes = num_timesteps
+        self.num_nodes = num_nodes
         self.smoothing_factor= smoothing_factor
         self.offset = offset
         self.random_state = random_state
