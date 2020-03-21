@@ -254,7 +254,7 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
     tensor_path = Path(experiment_folder)/'datasets'/data_tensor_name
     tensor_stem = Path(data_tensor_name).stem
 
-    for decomposition in DECOMPOSITION_PARAMS:
+    for noise_seed, decomposition in enumerate(DECOMPOSITION_PARAMS):
         print(decomposition)
         experiment_params = {
             'save_path': f'{save_path}',
@@ -269,7 +269,8 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
             {
                 "type": "AddNoise",
                 "arguments": {
-                    "noise_level": noise_level
+                    "noise_level": noise_level,
+                    "seed": noise_seed
             }
             },
             {
@@ -287,6 +288,7 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
             log_params=LOG_PARAMS,
             preprocessor_params=preprocessor_params,
             load_id=None,
+            extra_summary_fields={'noise_seed': noise_seed}
         )
         experiment.run_experiments()
 
