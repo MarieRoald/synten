@@ -33,6 +33,7 @@ from copy import copy
 import numpy as np
 from sklearn.utils import check_random_state
 from subclass_register import SubclassRegister
+from scipy.ndimage import gaussian_filter1d
 # import random
 
 
@@ -109,6 +110,7 @@ class EvolvingSubNetworkComponent:
         prob_removing=1,
         prob_shifting=0,
         prob_becoming_passive=0,
+        smoothing_level=None,
         activation_rate=None,
         random_state=None,
     ):
@@ -124,6 +126,8 @@ class EvolvingSubNetworkComponent:
             Per time-step probability of a deactivated chunk becoming passive
         prob_shifting : float
             Per time-step probability of the node indices shifting
+        smoothing_level : float or None
+            Standard deviation of Gaussian filtered used to blur the components
         activation_rate : float or None
             How fast a node goes from active to deactivated
         random_state : Int or None or numpy.random.RandomState
@@ -135,6 +139,7 @@ class EvolvingSubNetworkComponent:
         self.prob_removing = prob_removing
         self.prob_becoming_passive = prob_becoming_passive
         self.prob_shifting = prob_shifting
+        self.smoothing_level = smoothing_level
         
         self.activation_rate = activation_rate
         self.random_state = random_state
@@ -256,6 +261,8 @@ class EvolvingSubNetworkComponent:
                 idx = min_idx + ((idx - min_idx + self.shift) % self.network.active_nodes)
                 factor_column[idx] += (self.rng_.standard_normal()*chunk_weight*0.1) + chunk_weight*0.8
 
+        if self.smoothing_level is not None:
+            factor_column = gaussian_filter1d(factor_column, self.smoothing_level, mode="nearest")
         return factor_column
     
     def get_dynamic_factor(self, num_timesteps, debug=False):
