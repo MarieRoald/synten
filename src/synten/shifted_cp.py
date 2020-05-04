@@ -30,7 +30,8 @@ class ShiftedCPNetworksGenerator(BaseEvolvingComponentsGenerator):
         self.B_0 = rng.normal(size=(self.num_nodes, self.num_components))
         self.B_0 = np.clip(self.B_0, a_min=0, a_max=None)
         self.B_0 /= np.linalg.norm(self.B_0, axis=0)
-        self.B_0 = gaussian_filter1d(self.B_0, axis=0, sigma=self.smoothing_factor, mode="wrap")
+        if self.smoothing_factor > 0:
+            self.B_0 = gaussian_filter1d(self.B_0, axis=0, sigma=self.smoothing_factor, mode="wrap")
 
     def generate_factors(self):
         rng = check_random_state(self.random_state)
