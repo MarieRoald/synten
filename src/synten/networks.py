@@ -111,6 +111,7 @@ class EvolvingSubNetworkComponent:
         prob_shifting=0,
         prob_becoming_passive=0,
         smoothing_level=None,
+        gamma_transform_strength=1,
         activation_rate=None,
         random_state=None,
     ):
@@ -128,6 +129,8 @@ class EvolvingSubNetworkComponent:
             Per time-step probability of the node indices shifting
         smoothing_level : float or None
             Standard deviation of Gaussian filtered used to blur the components
+        gamma_transform_strength : float
+            Strength of gamma transform of components, no effect is 1.
         activation_rate : float or None
             How fast a node goes from active to deactivated
         random_state : Int or None or numpy.random.RandomState
@@ -140,6 +143,7 @@ class EvolvingSubNetworkComponent:
         self.prob_becoming_passive = prob_becoming_passive
         self.prob_shifting = prob_shifting
         self.smoothing_level = smoothing_level
+        self.gamma_transform_strength = gamma_transform_strength
         
         self.activation_rate = activation_rate
         self.random_state = random_state
@@ -173,7 +177,8 @@ class EvolvingSubNetworkComponent:
 
         added = self.rng_.choice(list(available))
         self.active_chunks.add(added)
-        self.chunk_weights[added] = 0.01
+        if self.activation_rate is not None:
+            self.chunk_weights[added] = 0.01
 
     def remove_chunk(self):
         """Removes a random chunk to the subnetwork.
@@ -227,7 +232,7 @@ class EvolvingSubNetworkComponent:
             if active:
                 return 0.99
             else:
-                return 0.01
+                return 0.0
 
         if active:
             activation_rate = self.activation_rate + 1
@@ -260,7 +265,7 @@ class EvolvingSubNetworkComponent:
             for idx in chunk:
                 idx = min_idx + ((idx - min_idx + self.shift) % self.network.active_nodes)
                 factor_column[idx] += (self.rng_.standard_normal()*chunk_weight*0.1) + chunk_weight*0.8
-
+        factor_column = np.sign(factor_column)*np.abs(factor_column)**self.gamma_transform_strength
         if self.smoothing_level is not None:
             factor_column = gaussian_filter1d(factor_column, self.smoothing_level, mode="nearest")
         return factor_column
