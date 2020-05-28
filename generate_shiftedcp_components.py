@@ -5,21 +5,21 @@ from itertools import product
 
 
 if __name__ == '__main__':
-    shape = (40, 160, 50)
-    num_timesteps = 40
-    num_nodes = 160
-    num_subjects = 50
+    shape = (20, 30, 20)
+    num_timesteps = 20
+    num_nodes = 30
+    num_subjects = 20
 
 
 
-    rank_2_clusters =  {
+    rank_3_clusters =  {
         'clustering': {
-                'num_informative_components': 2,
+                'num_informative_components': 3,
                 'class_sep': 2
         }
     }
 
-    rank_2_networks = {
+    rank_3_networks = {
         f'shifted_cp_smooth_{smoothing_factor}': [
             'ShiftedCPNetworksGenerator',
             {
@@ -30,28 +30,26 @@ if __name__ == '__main__':
         for smoothing_factor in range(1, 5)
     }
 
-    rank_2_timeseries = {
+    rank_3_timeseries = {
         'trends': {'component_params': [
             {
-                'type': "ExponentialTimeComponent",
+                'type': "RandomTimeComponent",
                 'kwargs': {
-                    'a': 1,
-                    'b': -0.2,
-                    'c': 1
                 }
             },
             {
-                'type': "LogisticTimeComponent",
+                'type': "RandomTimeComponent",
                 'kwargs': {
-                    'a': 2,
-                    'b': 2,
-                    'c': num_timesteps/2,
-                    'd': 1
+                }
+            },
+            {
+                'type': "RandomTimeComponent",
+                'kwargs': {
                 }
             },
         ]},
     }
     
-    experiment_path = Path('shiftedcp_experiment/datasets')
+    experiment_path = Path('shiftedcp_experiment_rank3/datasets')
     experiment_path.mkdir(parents=True, exist_ok=True)
-    generate_many_datasets(rank_2_clusters, rank_2_networks, rank_2_timeseries, shape, 2, str(experiment_path), 5)
+    generate_many_datasets(rank_3_clusters, rank_3_networks, rank_3_timeseries, shape, 3, str(experiment_path), 5)

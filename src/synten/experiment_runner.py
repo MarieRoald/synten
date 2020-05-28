@@ -4,6 +4,7 @@ import shutil
 from tenkit_tools.experiment import Experiment
 from tenkit.decomposition.block_parafac2 import RLS, Parafac2ADMM, BlockParafac2
 from scipy.sparse import dok_matrix, csr_matrix
+import numpy as np
 # Skal denne fila være en del av synten?
 # eller en del av tkt?  
 
@@ -18,6 +19,7 @@ from scipy.sparse import dok_matrix, csr_matrix
 
 
 L = dok_matrix((25**2, 25**2))
+
 for i, L_i in enumerate(L):
     if i - 25 >= 0:
         L[i, i-25] = -1
@@ -32,7 +34,16 @@ for i, L_i in enumerate(L):
         L[i, i+1] = -1
         L[i, i] = L[i, i] + 1
 
-L = csr_matrix(L)
+#L = csr_matrix(L)
+L = np.zeros((30, 30))
+#L = np.zeros((160, 160))
+for i, L_i in enumerate(L):
+    if i > 0:
+        L_i[i-1] -= 1
+        L_i[i] += 1
+    if i < L.shape[0] - 1:
+        L_i[i+1] -= 1
+        L_i[i] += 1
 
 
 FLEXIBLE_DECOMPOSITION_PARAMS = {
@@ -72,58 +83,74 @@ FLEXIBLE_DECOMPOSITION_PARAMS = {
     #for coupling_strength, max_coupling in product([1e-4, 1e-3, 1e-2, 1e-1, 1, 1.8e1, 3e1, 5.6e1, 100], [10, 1e2, 1e4, 1e6, 1e8, 1e10])
 
 ADMM_PARAFAC2_PARAMS = {
-    'parafac2_admm_auto_rho': {
+    f'parafac2_admm_smooth_{reg}': {
         "type": "BlockParafac2",
         "arguments": {
             "init": "random",
             "checkpoint_frequency": 500,
             "convergence_tol": 1e-8,
+            "convergence_check_frequency": 10,
+            "projection_update_frequency": 1,
             "max_its": 8000,
             "sub_problems": [
-                RLS(mode=0),
-                Parafac2ADMM(rho=None, verbose=False, max_it=10),  # 0.2
-                RLS(mode=2, non_negativity=True),
+                RLS(mode=0, ridge_penalty=0.01),#reg/10),
+                Parafac2ADMM(rho=None, verbose=False, max_it=50, non_negativity=False, l2_similarity=L*reg + np.eye(L.shape[0])*0.01),  # 0.2
+                RLS(mode=2, non_negativity=True, ridge_penalty=0.01)#reg/10),
             ]
         }
-    },
-   # 'parafac2_admm_0_02': {
-   #     "type": "BlockParafac2",
-   #     "arguments": {
-   #         "init": "random",
-   #         "checkpoint_frequency": 500,
-   #         "convergence_tol": 1e-8,
-   #         "max_its": 8000,
-   #         "sub_problems": [
-   #             RLS(mode=0),
-   #             Parafac2ADMM(rho=0.02, verbose=False, max_it=10),
-   #             RLS(mode=2, non_negativity=True),
-   #         ]
-   #     }
-   # }
+    } for reg in [0] + list(np.logspace(-1, np.log10(20), 6))# [1, 10, 100]
+    #'parafac2_admm_0_2_50_sub_its': {
+    #    "type": "BlockParafac2",
+    #    "arguments": {
+    #        "init": "random",
+    #        "checkpoint_frequency": 500,
+    #        "convergence_tol": 1e-8,
+    #        "max_its": 8000,
+    #        "sub_problems": [
+    #            RLS(mode=0),
+    #            Parafac2ADMM(rho=0.2, verbose=False, max_it=50),
+    #            RLS(mode=2, non_negativity=True),
+    #        ]
+    #    }
+    #},
+    #'parafac2_admm_0_02_50_sub_its': {
+    #    "type": "BlockParafac2",
+    #    "arguments": {
+    #        "init": "random",
+    #        "checkpoint_frequency": 500,
+    #        "convergence_tol": 1e-8,
+    #        "max_its": 8000,
+    #        "sub_problems": [
+    #            RLS(mode=0),
+    #            Parafac2ADMM(rho=0.02, verbose=False, max_it=50),
+    #            RLS(mode=2, non_negativity=True),
+    #        ]
+    #    }
+    #},
 
 }
 
 DECOMPOSITION_PARAMS = {
     **ADMM_PARAFAC2_PARAMS,
-#    'cp': {
-#        "type": "CP_ALS",
-#        "arguments": {
-#            "max_its": 8000,
-#            "checkpoint_frequency": 100,
-#            "convergence_tol": 1e-8,
-#            "non_negativity_constraints": [False, False, True],
-#        }
-#    },
-#    'parafac2': {
-#        "type": "Parafac2_ALS",
-#        "arguments": {
-#            "max_its": 8000,
-#            "checkpoint_frequency": 100,
-#            "convergence_tol": 1e-8,
-#            "non_negativity_constraints": [False, False, True],
-#            "print_frequency": -1,
-#        }
-#    },
+    'cp': {
+        "type": "CP_ALS",
+        "arguments": {
+            "max_its": 8000,
+            "checkpoint_frequency": 500,
+            "convergence_tol": 1e-8,
+            "non_negativity_constraints": [False, False, True],
+        }
+    },
+    'parafac2': {
+        "type": "Parafac2_ALS",
+        "arguments": {
+            "max_its": 8000,
+            "checkpoint_frequency": 500,
+            "convergence_tol": 1e-8,
+            "non_negativity_constraints": [False, False, True],
+            "print_frequency": -1,
+        }
+    },
 }
 
 DECOMPOSITION_PARAMS_OLD = {
@@ -189,6 +216,7 @@ LOG_PARAMS = [
 
 
 def run_experiments(experiment_folder, rank, num_runs, noise_level, glob_pattern='*'):
+    from pdb import set_trace; set_trace()
     experiment_folder = Path(experiment_folder)
     for tensor_path in sorted((experiment_folder/'datasets/').glob(glob_pattern)):
         run_decompositions(tensor_path.name, experiment_folder, rank, num_runs, noise_level)
@@ -227,6 +255,7 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
     save_path = Path(experiment_folder)/'experiments'
     tensor_path = Path(experiment_folder)/'datasets'/data_tensor_name
     tensor_stem = Path(data_tensor_name).stem
+    print(DECOMPOSITION_PARAMS)
 
     for noise_seed, decomposition in enumerate(DECOMPOSITION_PARAMS):
         print(decomposition)
@@ -236,10 +265,10 @@ def run_decompositions(data_tensor_name, experiment_folder, rank, num_runs, nois
             'experiment_name': f'{tensor_stem}_{decomposition}'
         }
         preprocessor_params = [
-            {
-                "type": "GlobalScale",
-                "arguments": {}
-            },
+            #{
+            #    "type": "GlobalScale",
+            #    "arguments": {}
+            #},
             {
                 "type": "AddNoise",
                 "arguments": {
