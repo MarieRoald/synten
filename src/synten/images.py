@@ -152,6 +152,7 @@ def sigmoidal(timestep, rate=1, carrying_capacity=1, offset_t=0, offset_r=0, inv
 def linear(timestep, slope=1, intercept=0):
     return slope*timestep - intercept
 
+
 def sinusiodal(timestep, angular_frequency=1, amplitude=1, offset=0, angular_offset=0):
     return amplitude*np.sin(timestep*angular_frequency + angular_offset) + offset
 
@@ -174,7 +175,6 @@ class ImageComponent:
             image_array = gaussian_blur(image_array, sigma=self.blur_size)
         return image_array
 
-        
     def draw_time_steps(self):
         for timestep, time_slice in enumerate(self.image.data):
             position = self.get_position(timestep)
@@ -185,10 +185,33 @@ class ImageComponent:
         self.positions = np.zeros(shape=(num_timesteps, 2))
 
         for axis in range(2):
-            self.positions[0, axis] = self.shift_parameters[axis]['initial_position']
-            for t in range(1, num_timesteps):
-                perturbation = self.get_perturbation(axis)
-                self.positions[t, axis] = self.positions[t-1, axis] + perturbation
+            if self.shift_parameters[axis]['method'] == 'random':
+                self._move_randomly(axis, num_timesteps)
+            elif self.shift_parameters[axis]['method'] == 'curve':
+                self._move_like_curve(axis, num_timesteps)
+    
+    def _move_randomly(self, axis, num_timesteps):
+        self.positions[0, axis] = self.shift_parameters[axis]['initial_position']
+        for t in range(1, num_timesteps):
+            perturbation = self.get_perturbation(axis)
+            self.positions[t, axis] = self.positions[t-1, axis] + perturbation
+    
+    def _move_like_curve(self, axis, num_timesteps):
+        time_points = np.arange(num_timesteps)
+        movement_type = self.shift_parameters[axis]['type']
+        arguments = self.shift_parameters[axis]['arguments']
+
+        if movement_type == 'quadratic':
+            self.positions[:, axis] = Polynomial(**arguments)(time_points)
+        elif movement_type == 'sigmoidal':
+            self.positions[:, axis] = sigmoidal(time_points, **arguments)
+        elif movement_type == 'linear':
+            self.positions[:, axis] = linear(time_points, **arguments)
+        elif movement_type == 'sinusiodal':
+            self.positions[:, axis] = sinusiodal(time_points, **arguments)
+        else:
+            raise ValueError()
+        print(self.positions[:, axis])
 
     def init_component(self):
         self.calculate_positions(len(self.image))
@@ -205,6 +228,9 @@ class ImageComponent:
         elif radius_type == 'linear':
             x_radius = partial(linear, **arguments['horisontal_coefficients'])
             y_radius = partial(linear, **arguments['vertical_coefficients'])
+        elif radius_type == 'sinusiodal':
+            x_radius = partial(sinusiodal, **arguments['horisontal_coefficients'])
+            y_radius = partial(sinusiodal, **arguments['vertical_coefficients'])
         else:
             pass
             
