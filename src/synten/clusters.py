@@ -1,5 +1,7 @@
 import warnings
 from sklearn.datasets import make_classification
+from sklearn.utils import check_random_state
+import numpy as np
 
 
 class ClusterComponents:
@@ -43,4 +45,31 @@ class ClusterGenerator:
     def classes(self):
         return self.generator.classes
 
-        
+
+class ThresholdedNormalA:
+    def __init__(self, num_samples, num_components, mean=0, std=1, random_state=None):
+        self.num_samples = num_samples
+        self.num_components = num_components
+        self.mean = mean
+        self.std = std
+        self.classes = np.zeros(num_samples)
+        self.random_state = check_random_state(random_state)
+    
+    def generate_factors(self):
+        data = self.random_state.standard_normal((self.num_samples, self.num_components))*self.std + self.mean
+        data[data < 0] = 0
+        return data
+
+
+class NormalA:
+    def __init__(self, num_samples, num_components, mean=0, std=1, random_state=None):
+        self.num_samples = num_samples
+        self.num_components = num_components
+        self.mean = mean
+        self.std = std
+        self.classes = np.zeros(num_samples)
+        self.random_state = check_random_state(random_state)
+    
+    def generate_factors(self):
+        data = self.random_state.standard_normal((self.num_samples, self.num_components))*self.std + self.mean
+        return data
