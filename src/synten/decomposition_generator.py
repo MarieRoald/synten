@@ -4,6 +4,7 @@ from pathlib import Path
 from tenkit.decomposition.decompositions import EvolvingTensor
 from .timeseries import TimeSeriesGenerator
 from .clusters import ClusterGenerator
+from . import clusters
 from .networks import evolving_component_register
 from . import shifted_cp
 from . import images
@@ -20,14 +21,23 @@ def generate_evolving_tensor(
     num_components,
     random_state=None
 ):
-    cluster_generator = ClusterGenerator(
-        generator_kwargs=dict(
-            num_samples = shape[0],
+    if 'component_generator' in clusters_params:
+        Generator = getattr(clusters, clusters_params['component_generator'])
+        cluster_generator = Generator(
+            num_samples=shape[0],
             num_components=num_components,
-            **clusters_params,
-        ),
-            random_state=random_state
-    )
+            **clusters_params['parameters']
+        )
+    else:
+    
+        cluster_generator = ClusterGenerator(
+            generator_kwargs=dict(
+                num_samples = shape[0],
+                num_components=num_components,
+                **clusters_params,
+            ),
+                random_state=random_state
+        )
     # assert len(networks_params['component_params']) == num_components
     networks_generator = evolving_component_register[networks_generator](
         num_timesteps=shape[-1],
@@ -95,7 +105,7 @@ def generate_many_datasets(
             for timeseries_name, timeseries_params in timeseries.items():
                 for run in range(num_datasets):
                     random_state = np.random.RandomState(run)
-                    name = f'{clusters_name}_{networks_name}_{timeseries_name}_{run}'
+                    name = f'{clusters_name}_{networks_name}_{timeseries_name}_{run:03d}'
                     generate_dataset(
                         clusters_params,
                         networks_generator,
